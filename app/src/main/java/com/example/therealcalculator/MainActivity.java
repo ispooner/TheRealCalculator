@@ -1,5 +1,6 @@
 package com.example.therealcalculator;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -28,11 +29,24 @@ public class MainActivity extends AppCompatActivity {
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate: Starting on create");
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Log.d(TAG, "Inside onCreate()");
         storageText = findViewById(R.id.storage_text);
         numText = findViewById(R.id.number_text);
+        if(savedInstanceState != null) {
+            saved.number = savedInstanceState.getFloat("prevNum", 0.0f);
+            saved.operation = saved.operation.fromInt(savedInstanceState.getInt("prevOp", 0));
+            display = savedInstanceState.getFloat("displayNum", 0.0f);
+            dec = savedInstanceState.getFloat("decPlace", 1f);
+            afterDec = savedInstanceState.getBoolean("afterDec", false);
+            sign = savedInstanceState.getFloat("sign", 1f);
+            storageText.setText(savedInstanceState.getCharSequence("storText", ""));
+            numText.setText(savedInstanceState.getCharSequence("displayText", "0"));
+        }
+
     }
 
     @Override
@@ -76,6 +90,19 @@ public class MainActivity extends AppCompatActivity {
     Float dec = 1f;
     Boolean afterDec = false;
     Float sign = 1f;
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putFloat("prevNum", saved.number);
+        outState.putInt("prevOp", saved.operation.toInt());
+        outState.putFloat("displayNum", display);
+        outState.putFloat("decPlace", dec);
+        outState.putBoolean("afterDec", afterDec);
+        outState.putFloat("sign", sign);
+        outState.putCharSequence("storText", storageText.getText());
+        outState.putCharSequence("displayText", numText.getText());
+    }
 
     public void onNumberClicked(View view) {
         if(!afterDec) {
@@ -229,7 +256,35 @@ public class MainActivity extends AppCompatActivity {
                 afterDec = true;
                 numText.setText(String.format("%.1f", display));
                 break;
+            case R.id.button_e:
+                display = new Float(Math.E);
+                numText.setText(display.toString());
+                afterDec = true;
+                dec = .0000001f;
+                break;
+            case R.id.button_ln:
+                display = new Float(Math.log(display.doubleValue()));
+                numText.setText(display.toString());
+                break;
+            case R.id.button_pi:
+                display = new Float(Math.PI);
+                numText.setText(display.toString());
+                afterDec = true;
+                dec = .000001f;
+                break;
+            case R.id.button_sqr:
+                display = display * display;
+                numText.setText(display.toString());
+                dec = dec * dec;
+                break;
+            case R.id.button_sqrt:
+                display = new Float(Math.sqrt(display.doubleValue()));
+                numText.setText(display.toString());
+                afterDec = true;
+                dec = .0000001f;
+                break;
         }
+
     }
 
     private void calculate() {
@@ -255,7 +310,35 @@ enum op {
     addition,
     subtraction,
     multiplication,
-    division
+    division;
+
+    public int toInt() {
+        switch(this) {
+            case addition:
+                return 0;
+            case subtraction:
+                return 1;
+            case multiplication:
+                return 2;
+            case division:
+                return 3;
+            default:
+                return -1;
+        }
+    }
+
+    public op fromInt(int o) {
+        switch(o) {
+            case 1:
+                return subtraction;
+            case 2:
+                return multiplication;
+            case 3:
+                return division;
+            default:
+                return addition;
+        }
+    }
 }
 
 class Previous {

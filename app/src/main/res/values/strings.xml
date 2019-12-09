@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">TheRealCalculator</string>
+    <string name="square">X\u00B2</string>
 </resources>
